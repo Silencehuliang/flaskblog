@@ -1,14 +1,13 @@
 import logging
 
 import redis
-from flask import Flask
 
 
 class Config(object):
     """工程配置信息"""
     SECRET_KEY = "EjpNVSNQTyGi1VvWECj9TvC/+kq3oujee2kTfQUs8yCM6xX9Yjq52v54g+HVoknA"
     # 数据库的配置信息
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:silence@127.0.0.1:3306/flaskblog"
+    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:silence@127.0.0.1:3306/FlaskBlog"
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
     # redis配置
@@ -31,6 +30,7 @@ class DevelopementConfig(Config):
 
 
 class ProductionConfig(Config):
+    """生产模式下的配置"""
     """生产模式下的配置"""
     LOG_LEVEL = logging.ERROR
 
