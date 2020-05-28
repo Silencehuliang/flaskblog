@@ -1,5 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
+
+from flask_wtf.csrf import generate_csrf
 from redis import StrictRedis
 from flask import Flask
 from flask_session import Session
@@ -32,6 +34,14 @@ def create_app(config_name):
     # 设置session保存位置
     Session(app)
 
+    @app.after_request
+    def after_request(response):
+        # 生成随机的csrf_token的值
+        csrf_token = generate_csrf()
+        # 设置一个cookie
+        response.set_cookie("csrf_token", csrf_token)
+        return response
+
     # 注册蓝图
     # 主页
     from blog.modules.index import index_bp
@@ -43,7 +53,8 @@ def create_app(config_name):
     from blog.modules.detail import detail_bp
     app.register_blueprint(detail_bp)
     # 个人中心
-
+    from blog.modules.comment import comment_bp
+    app.register_blueprint(comment_bp)
     # 后台管理
     # from blog.modules.admin import admin_bp
     # app.register_blueprint(admin_bp)

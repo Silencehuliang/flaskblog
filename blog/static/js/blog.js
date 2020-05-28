@@ -17,22 +17,11 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
 
     updateNewsData()
 
-    // 首页分类切换
-    $('.layui-nav li').click(function () {
-        // 取到指定分类的cid
-        var clickCid = $(this).attr('data-cid')
+    function getCookie(name) {
+        var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+        return r ? r[1] : undefined;
+    }
 
-        // 如果点击的分类与当前分类不一致
-        if (clickCid != currentCid) {
-            // 记录当前分类id
-            currentCid = clickCid
-
-            // 重置分页参数
-            cur_page = 1
-            total_page = 1
-            updateNewsData()
-        }
-    })
 
     //statr 分页
 
@@ -108,8 +97,43 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
 
     $(function () {
         $(".like").on('click', function () {
-
             if (!($(this).hasClass("layblog-this"))) {
+                var $this = $(this).children('.like-count');
+                var post_id = $this.attr("data-postid")
+                var comment_id = $this.attr("data-commentid")
+                if (post_id == undefined) {
+                    var params = {
+                        "id": comment_id,
+                    }
+                    var url = "/comment/like"
+                } else if (comment_id == undefined) {
+                    var params = {
+                        "id": post_id,
+                    }
+                    var url = "/details/like"
+                }
+                $.ajax({
+                    url: url,
+                    type: "post",
+                    contentType: "application/json",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrf_token")
+                    },
+                    data: JSON.stringify(params),
+                    success: function (resp) {
+                        if (resp.errno == "0") {
+                            var like_count = $this.attr('data-likecount')
+                            if (like_count == undefined) {
+                                like_count = 0
+                            }
+                            like_count = parseInt(like_count) + 1
+                            $this.attr('data-likecount', like_count)
+                            $this.html(like_count)
+
+                        }
+                    }
+                })
+
                 this.text = '已赞';
                 $(this).addClass('layblog-this');
                 $.tipsBox({
@@ -125,19 +149,20 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
                 })
             }
         });
-    });
-
-    //end 评论的特效
+    })
 
 
-    // start点赞图标变身
+//end 评论的特效
+
+
+// start点赞图标变身
     $('#LAY-msg-box').on('click', '.info-img', function () {
         $(this).addClass('layblog-this');
     })
 
-    // end点赞图标变身
+// end点赞图标变身
 
-    //end 提交
+//end 提交
     $('#item-btn').on('click', function () {
         var elemCont = $('#LAY-msg-content')
             , content = elemCont.val();
@@ -145,6 +170,7 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
             layer.msg('请先输入留言');
             return elemCont.focus();
         }
+
 
         var view = $('#LAY-msg-tpl').html()
 
@@ -167,7 +193,7 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
 
     })
 
-    // start  图片遮罩
+// start  图片遮罩
     var layerphotos = document.getElementsByClassName('layer-photos-demo');
     for (var i = 1; i <= layerphotos.length; i++) {
         layer.photos({
@@ -176,8 +202,8 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
         });
     }
 
-    // end 图片遮罩
-
+// end 图片遮罩
+    
 
     function updateNewsData() {
         var params = {
@@ -200,14 +226,13 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
                     // 显示数据
                     for (var i = 0; i < resp.data.post_dict_list.length; i++) {
                         var post = resp.data.post_dict_list[i]
-                        console.log(post.id)
 
                         var content = '<div class="item"><div class="item-box">'
                         content += '<h3><a href="/details/' + post.id + '">' + post.title + '</a></h3>'
                         content += '<h5>发布于：<span>' + post.create_time + '</span></h5>'
                         content += '<p><a href="/details/' + post.id + '"</a>' + post.digest + '</p>'
                         content += '<img src="' + post.index_image_url + '" alt="">' + '<a href="/details/' + post.id + '"'
-                        content += '</div><div class="comment count"><a href="details/'+post.id+'#comment">评论</a><a href="javascript:;" class="like">点赞</a></div></div>'
+                        content += '</div></div>'
                         $(".item-list").append(content)
                     }
                 } else {
@@ -218,6 +243,7 @@ layui.define(['element', 'form', 'laypage', 'jquery', 'laytpl'], function (expor
         )
     }
 
-    //输出test接口
+//输出test接口
     exports('blog', {});
-});  
+})
+;

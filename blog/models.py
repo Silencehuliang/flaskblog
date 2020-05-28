@@ -81,6 +81,7 @@ class Comment(BaseModel, db.Model):
     content = db.Column(db.Text, nullable=False)  # 评论内容
     parent_id = db.Column(db.Integer, db.ForeignKey("comment.id"))  # 父评论id
     parent = db.relationship("Comment", remote_side=[id])  # 自关联
+    like_count = db.Column(db.Integer, default=0)  # 点赞条数
 
     def to_dict(self):
         resp_dict = {
@@ -89,7 +90,8 @@ class Comment(BaseModel, db.Model):
             "content": self.content,
             "parent": self.parent.to_dict() if self.parent else None,
             "user": User.query.get(self.user_id).to_dict(),
-            "news_id": self.news_id,
+            "post_id": self.post_id,
+            "like_count": self.like_count
         }
         return resp_dict
 
