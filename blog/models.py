@@ -70,6 +70,7 @@ class Post(BaseModel, db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))  # 当前博文的作者id
     status = db.Column(db.Integer, default=0)  # 当前博文状态 如果为0代表可对外展示，1代表隐藏
     comments = db.relationship("Comment", lazy="dynamic")  # 当前博文的所有评论
+    is_top = db.Column(db.Integer, default=0)  # 当前置顶状态 如果为0代表置顶，1代表不置顶
 
     def to_review_dict(self):
         resp_dict = {
@@ -89,7 +90,9 @@ class Post(BaseModel, db.Model):
             "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
             "index_image_url": self.index_image_url,
             "clicks": self.clicks,
-            "comments": self.comments.count()
+            "comments": self.comments.count(),
+            "category": Category.query.get(self.category_id).to_dict()['name'],
+            "is_top": self.is_top
         }
         return resp_dict
 
@@ -148,13 +151,3 @@ class Category(BaseModel, db.Model):
         return resp_dict
 
 
-class Top(BaseModel, db.Model):
-    """置顶博文"""
-    id = db.Column(db.Integer, primary_key=True)  # 分类编号
-    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)  # 博文id
-
-    def to_dict(self):
-        resp_dict = {
-            'post': Post.query.get(self.post_id).to_review_dict(),
-        }
-        return resp_dict

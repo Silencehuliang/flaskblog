@@ -5,7 +5,7 @@
     flow.load({
         elem: '#LAY_bloglist' //指定列表容器
         , done: function (page, next) {
-            var lis = [];
+            var content = "";
             var currentCid = 1;
             var cur_page = 1;
             var params = {
@@ -16,27 +16,28 @@
             //以jQuery的Ajax请求为例，请求下一页数据（注意：page是从2开始返回）
             $.get('/article/post_list?', params, function (res) {
                 if (res.errno == "0") {
-                    if (cur_page == 1) {
-                        $(".bloglist").html("")
-                    }
                     for (var i = 0; i < res.data.post_dict_li.length; i++) {
                         var post = res.data.post_dict_li[i]
-                        var content = '<section class="article-item zoomIn article">\n'
-
-                        content += '<h5 class="title"><a href="read.html">' + post.title + '</a></h5>'
-                        content += '<div class="time"><span class="day">21</span><span class="month fs-18">1<span class="fs-14">月</span></span><span class="year fs-18 ml10">2019</span></div>'
-                        content += '<a href="/post/' + post.id + '" ">' + post.digest + '</a>'
-                        content += '<div class="content"><a href="read.html" class="cover img-light"><img src="' + post.index_image_url + '"></a>' + post.digest + '</div><div class="read-more"><a href="read.html" class="fc-black f-fwb">继续阅读</a></div>'
+                        content += '<section class="article-item zoomIn article">'
+                        if (post.is_top == 0) {
+                            content += '<div class="fc-flag">置顶</div>'
+                        }
+                        content += '<h5 class="title"><span class="fc-blue">'+post.source+'</span>'
+                        content += '<a href="'+post.id+'">' + post.title + '</a></h5>'
+                        var date_list = post.create_time.toString().split(' ')[0].split('-')
+                        content += '<div class="time"><span class="day">'+date_list[2]+'</span><span class="month fs-18">'+date_list[1]+'<span class="fs-14">月</span></span><span class="year fs-18 ml10">'+date_list[0]+'</span></div>'
+                        content += '<div class="content"><a href="read.html" class="cover img-light"><img src="' + post.index_image_url + '">'
+                        content += '</a>' + post.digest + '</div><div class="read-more"><a href="'+post.id+'" class="fc-black f-fwb">继续阅读</a></div>'
                         content += ' <aside class="f-oh footer"><div class="f-fl tags"><span class="fa fa-tags fs-16"></span> <a class="tag">' + post.category + '</a></div>'
-                        content += '<div class="f-fr"><span class="read"><i class="fa fa-eye fs-16"></i><i class="num">57</i></span><span class="ml20"><i class="fa fa-comments fs-16"></i><a href="javascript:void(0)" class="num fc-grey">1</a></span>'
+                        content += '<div class="f-fr"><span class="read"><i class="fa fa-eye fs-16"></i><i class="num">'+post.clicks+'</i></span><span class="ml20"><i class="fa fa-comments fs-16"></i><a href="javascript:void(0)" class="num fc-grey">'+post.comments+'</a></span>'
                         content += '</div></aside></section>'
-                        $(".bloglist").append(content)
+
                     }
                 } else {
                     // 请求失败
                     alert(res.errmsg)
                 }
-
+                console.log(page, res.data.pages)
                 //执行下一页渲染，第二参数为：满足“加载更多”的条件，即后面仍有分页
                 //pages为Ajax返回的总页数，只有当前页小于总页数的情况下，才会继续出现加载更多
                 next(content, page < res.data.pages);

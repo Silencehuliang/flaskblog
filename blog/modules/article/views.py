@@ -1,9 +1,45 @@
-from flask import current_app, render_template, request, jsonify
+from flask import current_app, render_template, request, jsonify, abort
 
 from . import article_bp
-from blog.models import Post, Category, Top
+from blog.models import Post, Category, Comment
 from blog import constants
 from ...utils.response_code import RET
+
+
+@article_bp.route('/<int:post_id>')
+def post_detail(post_id):
+    """
+    博文详情
+    :param post_id:
+    :return:
+    """
+
+    try:
+        post = Post.query.get(post_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    if not post:
+        abort(404)
+
+    post.clicks += 1
+
+    comments = []
+    try:
+        comments = Comment.query.filter(Comment.news_id == post_id).order_by(Comment.create_time.desc()).all()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    comment_dict_li = []
+    for comment in comments:
+        comment_dict = comment.to_dict()
+        comment_dict_li.append(comment_dict)
+
+    data = {
+        "news": post.to_dict(),
+        "comments": comment_dict_li
+    }
+    return render_template("blog/read.html", data=data)
 
 
 @article_bp.route('/')
@@ -23,10 +59,10 @@ def article_index():
     for category in categories:
         category_list.append(category.to_dict())
 
-    tops = Top.query.all()
+    tops = Post.query.filter(Post.is_top == 0)
     top_list = []
     for top in tops:
-        top_list.append(top.to_dict())
+        top_list.append(top.to_review_dict())
     data = {
         'post_dict_list': post_dict_list,
         'category_list': category_list,
